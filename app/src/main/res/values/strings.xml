@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">subminimum brightness</string>
+    <!-- Settings Activity Title -->
+    <string name="title_activity_settings">SettingsActivity</string>
+
+    <!-- Dimmer Titles -->
+    <string name="dimmer_category">Dimmer Settings</string>
+    <string name="dimmer_title">Dimmer</string>
+    <string name="accessibility_service_description">Subminimum Brightness accessibility service</string>
+
+
+</resources>
