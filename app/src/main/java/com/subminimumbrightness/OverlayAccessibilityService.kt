@@ -11,6 +11,10 @@ import androidx.preference.PreferenceManager
 import android.os.Build
 import android.view.accessibility.AccessibilityEvent
 import android.content.Intent
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
+import com.subminimumbrightness.SettingsActivity.Companion.ACTION_STOP_SERVICE
+
 
 class OverlayAccessibilityService : AccessibilityService() {
 
@@ -60,12 +64,47 @@ class OverlayAccessibilityService : AccessibilityService() {
         createBrightnessOverlay()
     }
 
-    override fun onUnbind(intent: Intent?): Boolean {
-        removeBrightnessOverlay()
-        return super.onUnbind(intent)
-    }
-
     companion object {
         const val OVERLAY_ALPHA = "overlay_alpha"
+        const val ACTION_UPDATE_ALPHA = "com.subminimumbrightness.action.UPDATE_ALPHA"
+        const val EXTRA_ALPHA = "com.subminimumbrightness.extra.ALPHA"
     }
+    private val updateAlphaReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == ACTION_UPDATE_ALPHA) {
+                val alpha = intent.getFloatExtra(EXTRA_ALPHA, 0.5f)
+                overlayView?.alpha = alpha
+            }
+        }
+    }
+    private val stopServiceReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == ACTION_STOP_SERVICE) {
+                removeBrightnessOverlay()
+                stopSelf()
+            }
+        }
+    }
+
+
+    override fun onCreate() {
+        super.onCreate()
+        val filter = IntentFilter(ACTION_UPDATE_ALPHA)
+        registerReceiver(updateAlphaReceiver, filter)
+        val stopFilter = IntentFilter(ACTION_STOP_SERVICE)
+        registerReceiver(stopServiceReceiver, stopFilter)
+    }
+
+  //  override fun onUnbind(intent: Intent?): Boolean {
+    //    unregisterReceiver(updateAlphaReceiver)
+      //  removeBrightnessOverlay()
+        //return super.onUnbind(intent)
+    //}
+  override fun onUnbind(intent: Intent?): Boolean {
+      removeBrightnessOverlay()
+      unregisterReceiver(stopServiceReceiver)
+      return super.onUnbind(intent)
+  }
+
+
 }

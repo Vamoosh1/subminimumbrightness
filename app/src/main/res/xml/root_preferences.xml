@@ -5,7 +5,7 @@
         <SeekBarPreference
             app:key="dimmer_slider"
             app:title="@string/dimmer_title"
-            android:max="100"
-            app:defaultValue="50" />
+            android:max="90"
+            app:defaultValue="0" />
     </PreferenceCategory>
 </PreferenceScreen>

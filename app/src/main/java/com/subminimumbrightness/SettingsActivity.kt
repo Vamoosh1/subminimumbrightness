@@ -18,9 +18,26 @@ import androidx.preference.SeekBarPreference
 import com.subminimumbrightness.OverlayAccessibilityService
 import android.content.ComponentName
 import android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS
+import android.view.MenuItem
 
 class SettingsActivity : AppCompatActivity() {
 
+    private fun stopOverlayService() {
+        val intent = Intent(this, OverlayAccessibilityService::class.java)
+        stopService(intent)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                val stopIntent = Intent(ACTION_STOP_SERVICE)
+                sendBroadcast(stopIntent)
+                finish()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
     private fun startOverlayService() {
         val intent = Intent(this, OverlayAccessibilityService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -76,20 +93,24 @@ class SettingsActivity : AppCompatActivity() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
 
-            val dimmerPreference = findPreference<SeekBarPreference>("dimmer")
+            val dimmerPreference = findPreference<SeekBarPreference>("dimmer_slider")
             dimmerPreference?.setOnPreferenceChangeListener { _, newValue ->
                 val alpha = (newValue as Int) / 100f
-                (activity as? SettingsActivity)?.let { settingsActivity ->
-                    settingsActivity.overlayView?.alpha = alpha
+                val intent = Intent(OverlayAccessibilityService.ACTION_UPDATE_ALPHA).apply {
+                    putExtra(OverlayAccessibilityService.EXTRA_ALPHA, alpha)
                 }
+                activity?.sendBroadcast(intent)
                 true
             }
+
         }
     }
 
     companion object {
         private const val REQUEST_OVERLAY_PERMISSION_CODE = 1001
         private const val REQUEST_ACCESSIBILITY_PERMISSION_CODE = 1002
+        const val ACTION_STOP_SERVICE = "com.subminimumbrightness.ACTION_STOP_SERVICE"
+
     }
     private var overlayView: View? = null
     private var windowManager: WindowManager? = null
