@@ -19,9 +19,20 @@ import com.subminimumbrightness.OverlayAccessibilityService
 import android.content.ComponentName
 import android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS
 import android.view.MenuItem
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.preference.Preference
+import androidx.preference.PreferenceManager
+
 
 class SettingsActivity : AppCompatActivity() {
 
+
+
+    companion object {
+        private const val REQUEST_OVERLAY_PERMISSION_CODE = 1001
+        private const val REQUEST_ACCESSIBILITY_PERMISSION_CODE = 1002
+        const val ACTION_STOP_SERVICE = "com.subminimumbrightness.ACTION_STOP_SERVICE"
+    }
     private fun stopOverlayService() {
         val intent = Intent(this, OverlayAccessibilityService::class.java)
         stopService(intent)
@@ -38,6 +49,7 @@ class SettingsActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
+
     private fun startOverlayService() {
         val intent = Intent(this, OverlayAccessibilityService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -46,9 +58,13 @@ class SettingsActivity : AppCompatActivity() {
             startService(intent)
         }
     }
-
+    fun openAccessibilitySettings() {
+        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        startActivity(intent)
+    }
     private fun requestAccessibilityPermission() {
-        val serviceName = ComponentName(this, OverlayAccessibilityService::class.java).flattenToShortString()
+        val serviceName =
+            ComponentName(this, OverlayAccessibilityService::class.java).flattenToShortString()
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             putExtra(ACTION_ACCESSIBILITY_SETTINGS, serviceName)
@@ -58,6 +74,7 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         setContentView(R.layout.settings_activity)
         if (savedInstanceState == null) {
             supportFragmentManager
@@ -66,7 +83,6 @@ class SettingsActivity : AppCompatActivity() {
                 .commit()
         }
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        requestAccessibilityPermission()
     }
 
     private fun requestOverlayPermission() {
@@ -96,22 +112,32 @@ class SettingsActivity : AppCompatActivity() {
             val dimmerPreference = findPreference<SeekBarPreference>("dimmer_slider")
             dimmerPreference?.setOnPreferenceChangeListener { _, newValue ->
                 val alpha = (newValue as Int) / 100f
+                val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
+                val editor = sharedPreferences.edit()
+                editor.putFloat(OverlayAccessibilityService.OVERLAY_ALPHA, alpha)
+                editor.apply()
                 val intent = Intent(OverlayAccessibilityService.ACTION_UPDATE_ALPHA).apply {
                     putExtra(OverlayAccessibilityService.EXTRA_ALPHA, alpha)
                 }
                 activity?.sendBroadcast(intent)
                 true
             }
+            val openAccessibilitySettingsPreference =
+                findPreference<Preference>("open_accessibility_settings")
+            openAccessibilitySettingsPreference?.setOnPreferenceClickListener {
+                (activity as? SettingsActivity)?.openAccessibilitySettings()
+                true
+            }
+        }
+
+        companion object {
+            private const val REQUEST_OVERLAY_PERMISSION_CODE = 1001
+            private const val REQUEST_ACCESSIBILITY_PERMISSION_CODE = 1002
+
 
         }
-    }
 
-    companion object {
-        private const val REQUEST_OVERLAY_PERMISSION_CODE = 1001
-        private const val REQUEST_ACCESSIBILITY_PERMISSION_CODE = 1002
-        const val ACTION_STOP_SERVICE = "com.subminimumbrightness.ACTION_STOP_SERVICE"
-
+        private var overlayView: View? = null
+        private var windowManager: WindowManager? = null
     }
-    private var overlayView: View? = null
-    private var windowManager: WindowManager? = null
 }

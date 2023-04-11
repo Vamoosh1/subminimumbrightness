@@ -7,5 +7,8 @@
             app:title="@string/dimmer_title"
             android:max="90"
             app:defaultValue="0" />
+        <Preference
+            app:key="open_accessibility_settings"
+            app:title="Open Accessibility Settings" />
     </PreferenceCategory>
 </PreferenceScreen>
