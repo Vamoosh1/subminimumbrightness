@@ -50,10 +50,27 @@ class OverlayAccessibilityService : AccessibilityService() {
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this@OverlayAccessibilityService)
             val savedalpha = sharedPreferences.getFloat(OVERLAY_ALPHA, 0.5f)
             this.alpha = savedalpha
+            val savedColorTemperature = sharedPreferences.getFloat(COLOR_TEMPERATURE, 0f)
+            updateColorTemperature(savedColorTemperature)
         }
 
         windowManager?.addView(overlayView, params)
     }
+    fun sliderToRgb(sliderValue: Int): Int {
+        val maxValue = 100.0
+        val ratio = sliderValue / maxValue
+        val red: Int
+        val green: Int
+        val blue: Int
+
+        red = (130 * ratio * 2).toInt().coerceIn(0, 130)
+        green = (25 * ratio).toInt().coerceIn(0, 25)
+        blue = 0
+
+        return Color.rgb(red, green, blue)
+    }
+
+
 
     private fun removeBrightnessOverlay() {
         overlayView?.let { windowManager?.removeView(it) }
@@ -72,12 +89,20 @@ class OverlayAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
         createBrightnessOverlay()
     }
+    private fun updateColorTemperature(value: Float) {
+        val colorTemperature = (value * 100).toInt()
+        overlayView?.setBackgroundColor(sliderToRgb(colorTemperature))
+    }
+
 
     companion object {
         const val OVERLAY_ALPHA = "overlay_alpha"
         const val ACTION_UPDATE_ALPHA = "com.subminimumbrightness.action.UPDATE_ALPHA"
         const val EXTRA_ALPHA = "com.subminimumbrightness.extra.ALPHA"
         const val ACTION_STOP_SERVICE = "com.subminimumbrightness.ACTION_STOP_SERVICE"
+        const val COLOR_TEMPERATURE = "color_temperature"
+        const val ACTION_UPDATE_COLOR_TEMPERATURE = "com.subminimumbrightness.action.UPDATE_COLOR_TEMPERATURE"
+        const val EXTRA_COLOR_TEMPERATURE = "com.subminimumbrightness.extra.COLOR_TEMPERATURE"
     }
 
     private val stopServiceReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -88,12 +113,20 @@ class OverlayAccessibilityService : AccessibilityService() {
             }
         }
     }
-
-
+    private val updateColorTemperatureReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == ACTION_UPDATE_COLOR_TEMPERATURE) {
+                val colorTemperature = intent.getFloatExtra(EXTRA_COLOR_TEMPERATURE, 0f)
+                updateColorTemperature(colorTemperature)
+            }
+        }
+    }
     override fun onCreate() {
         super.onCreate()
         val filter = IntentFilter(ACTION_UPDATE_ALPHA)
         registerReceiver(updateAlphaReceiver, filter)
+        val colorTemperatureFilter = IntentFilter(ACTION_UPDATE_COLOR_TEMPERATURE)
+        registerReceiver(updateColorTemperatureReceiver, colorTemperatureFilter)
         val stopFilter = IntentFilter(ACTION_STOP_SERVICE)
         registerReceiver(stopServiceReceiver, stopFilter)
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)

@@ -122,6 +122,20 @@ class SettingsActivity : AppCompatActivity() {
                 activity?.sendBroadcast(intent)
                 true
             }
+            val colorTemperaturePreference = findPreference<SeekBarPreference>("color_temperature_slider")
+            colorTemperaturePreference?.setOnPreferenceChangeListener { _, newValue ->
+                val colorTemperature = (newValue as Int) / 100f
+                val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
+                val editor = sharedPreferences.edit()
+                editor.putFloat(OverlayAccessibilityService.COLOR_TEMPERATURE, colorTemperature)
+                editor.apply()
+                val intent = Intent(OverlayAccessibilityService.ACTION_UPDATE_COLOR_TEMPERATURE).apply {
+                    putExtra(OverlayAccessibilityService.EXTRA_COLOR_TEMPERATURE, colorTemperature)
+                }
+                activity?.sendBroadcast(intent)
+                true
+            }
+
             val openAccessibilitySettingsPreference =
                 findPreference<Preference>("open_accessibility_settings")
             openAccessibilitySettingsPreference?.setOnPreferenceClickListener {

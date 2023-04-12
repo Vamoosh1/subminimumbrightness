@@ -7,6 +7,13 @@
             app:title="@string/dimmer_title"
             android:max="90"
             app:defaultValue="0" />
+        <SeekBarPreference
+            android:id="@+id/color_temperature_slider"
+            android:key="color_temperature_slider"
+            android:title="Color Temperature"
+            android:max="100"
+            android:defaultValue="0"
+            android:summary="Adjust the color temperature of the screen." />
         <Preference
             app:key="open_accessibility_settings"
             app:title="Open Accessibility Settings" />
