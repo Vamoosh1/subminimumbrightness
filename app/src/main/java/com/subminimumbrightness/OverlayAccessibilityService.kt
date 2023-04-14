@@ -13,6 +13,7 @@ import android.view.accessibility.AccessibilityEvent
 import android.content.Intent
 import android.content.BroadcastReceiver
 import android.content.IntentFilter
+import androidx.core.graphics.ColorUtils
 import com.subminimumbrightness.OverlayAccessibilityService.Companion.ACTION_STOP_SERVICE
 
 
@@ -103,6 +104,7 @@ class OverlayAccessibilityService : AccessibilityService() {
         const val COLOR_TEMPERATURE = "color_temperature"
         const val ACTION_UPDATE_COLOR_TEMPERATURE = "com.subminimumbrightness.action.UPDATE_COLOR_TEMPERATURE"
         const val EXTRA_COLOR_TEMPERATURE = "com.subminimumbrightness.extra.COLOR_TEMPERATURE"
+        const val DEFAULT_COLOR_TEMPERATURE = 0f
     }
 
     private val stopServiceReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -130,6 +132,7 @@ class OverlayAccessibilityService : AccessibilityService() {
         val stopFilter = IntentFilter(ACTION_STOP_SERVICE)
         registerReceiver(stopServiceReceiver, stopFilter)
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+
     }
 
 
