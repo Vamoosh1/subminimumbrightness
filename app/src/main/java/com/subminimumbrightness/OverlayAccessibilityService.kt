@@ -13,8 +13,12 @@ import android.view.accessibility.AccessibilityEvent
 import android.content.Intent
 import android.content.BroadcastReceiver
 import android.content.IntentFilter
+import android.util.Log
 import androidx.core.graphics.ColorUtils
 import com.subminimumbrightness.OverlayAccessibilityService.Companion.ACTION_STOP_SERVICE
+import android.os.Handler
+import android.os.Looper
+
 
 
 
@@ -31,6 +35,11 @@ class OverlayAccessibilityService : AccessibilityService() {
             }
         }
     }
+    private fun getColorWithAlphaAndTemperature(alpha: Float, colorTemperature: Float): Int {
+        val temperatureColor = sliderToRgb((colorTemperature * 100).toInt())
+        return ColorUtils.setAlphaComponent(temperatureColor, (alpha * 255).toInt())
+    }
+
     private fun createBrightnessOverlay() {
         if (overlayView != null) return
 
@@ -52,6 +61,7 @@ class OverlayAccessibilityService : AccessibilityService() {
             val savedalpha = sharedPreferences.getFloat(OVERLAY_ALPHA, 0.5f)
             this.alpha = savedalpha
             val savedColorTemperature = sharedPreferences.getFloat(COLOR_TEMPERATURE, 0f)
+            Log.d("OverlayAccessibilityService", "Retrieved color temperature: $savedColorTemperature")
             updateColorTemperature(savedColorTemperature)
         }
 
@@ -123,6 +133,21 @@ class OverlayAccessibilityService : AccessibilityService() {
             }
         }
     }
+    private fun applySavedColorTemperature() {
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val savedColorTemperature = sharedPreferences.getFloat(COLOR_TEMPERATURE, 0f)
+        updateColorTemperature(savedColorTemperature)
+    }
+    private fun broadcastUpdateColorTemperature() {
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val savedColorTemperature = sharedPreferences.getFloat(COLOR_TEMPERATURE, 0f)
+        val intent = Intent(ACTION_UPDATE_COLOR_TEMPERATURE).apply {
+            putExtra(EXTRA_COLOR_TEMPERATURE, savedColorTemperature)
+        }
+        sendBroadcast(intent)
+        Log.d("OverlayAccessibilityService", "Emulated broadcast sent successfully.")
+    }
+
     override fun onCreate() {
         super.onCreate()
         val filter = IntentFilter(ACTION_UPDATE_ALPHA)
@@ -132,7 +157,9 @@ class OverlayAccessibilityService : AccessibilityService() {
         val stopFilter = IntentFilter(ACTION_STOP_SERVICE)
         registerReceiver(stopServiceReceiver, stopFilter)
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-
+        Handler(Looper.getMainLooper()).postDelayed({
+            broadcastUpdateColorTemperature()
+        }, 50)
     }
 
 

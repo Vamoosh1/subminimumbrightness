@@ -18,6 +18,7 @@ import androidx.preference.SeekBarPreference
 import com.subminimumbrightness.OverlayAccessibilityService
 import android.content.ComponentName
 import android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS
+import android.util.Log
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.Preference
@@ -59,13 +60,13 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
     fun openAccessibilitySettings() {
-        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        val intent = Intent(ACTION_ACCESSIBILITY_SETTINGS)
         startActivity(intent)
     }
     private fun requestAccessibilityPermission() {
         val serviceName =
             ComponentName(this, OverlayAccessibilityService::class.java).flattenToShortString()
-        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+        val intent = Intent(ACTION_ACCESSIBILITY_SETTINGS).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             putExtra(ACTION_ACCESSIBILITY_SETTINGS, serviceName)
         }
@@ -111,7 +112,7 @@ class SettingsActivity : AppCompatActivity() {
 
             val dimmerPreference = findPreference<SeekBarPreference>("dimmer_slider")
             dimmerPreference?.apply {
-                setUpdatesContinuously(true)
+                this.updatesContinuously = true
                 setOnPreferenceChangeListener { _, newValue ->
                 val alpha = (newValue as Int) / 100f
                 val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
@@ -127,13 +128,14 @@ class SettingsActivity : AppCompatActivity() {
             }
             val colorTemperaturePreference = findPreference<SeekBarPreference>("color_temperature_slider")
             colorTemperaturePreference?.apply{
-                setUpdatesContinuously(true)
-            setOnPreferenceChangeListener { _, newValue ->
+                this.updatesContinuously = true
+                setOnPreferenceChangeListener { _, newValue ->
                 val colorTemperature = (newValue as Int) / 100f
                 val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
                 val editor = sharedPreferences.edit()
                 editor.putFloat(OverlayAccessibilityService.COLOR_TEMPERATURE, colorTemperature)
                 editor.apply()
+                    Log.d("SettingsActivity", "editor.apply'd color temp")
                 val intent =
                     Intent(OverlayAccessibilityService.ACTION_UPDATE_COLOR_TEMPERATURE).apply {
                         putExtra(
